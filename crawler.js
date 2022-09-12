@@ -32,16 +32,42 @@ function readAndProcess(iconPagePath){
   fs.readFile(iconPagePath,{encoding:'utf-8'},processIconPage)
 }
 
+function saveJsons(jsons){
+  var jsonStr = JSON.stringify(jsons);
+  fs.writeFile('myjsonfile.json', jsonStr, 'utf8', ()=>{});
+}
+
 function processIconPage(err,data){
   if (err){
     throw err
   }
 
   const dom = new JSDOM(data);
-  console.log(dom.window.document)
-  console.log(dom.window.document.querySelector(".ibm-access").innerHTML);
 
+  const iconListEle = dom.window.document.querySelector("#icon-list")
+  const icons = iconListEle.childNodes
+  const cleanIcons = []
+  icons.forEach((currentValue)=>{
+    if(currentValue.id===undefined){
+      return
+    }
+    cleanIcons.push(currentValue)
+  })
 
+  let jsons = []
+  //https://stackoverflow.com/questions/4534488/does-the-javascript-for-in-function-return-just-an-index
+  //different from python, Js for...in returns only the index, this is a bad example to learn from
+  for (let iconIndex in cleanIcons){
+    let icon = cleanIcons[iconIndex]
+    let lgIconEle = icon.querySelector(".icon-lg,.clearfix")
+    let headingText = icon.querySelector("h3").textContent
+    let introText= icon.querySelector("p").textContent
+    let imgSrc = "https://www.ibm.com"+icon.querySelector("img").src
+    let json = {title: headingText, intro: introText, img: imgSrc}
+    jsons.push(json)
+  }
+
+  saveJsons(jsons)
 }
 
 function main(){
